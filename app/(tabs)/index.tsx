@@ -1,74 +1,88 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { useEffect, useState } from "react";
+import { Alert, Button, Platform, SafeAreaView, StatusBar, TextInput } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useNotification } from "@/context/NotificationContext";
+import DOMCoolCode from "@/components/DOMCoolCode";
 
 export default function HomeScreen() {
+  const { notification, expoPushToken, error } = useNotification();
+
+  const [dummyState, setDummyState] = useState(0);
+  const [sendNotifToken, setSendNotifToken] = useState("")
+
+  if (error) {
+    return <ThemedText>Error: {error.message}</ThemedText>;
+  }
+
+  const sendNotification = async (title: string, body: string) => {
+    if (!sendNotifToken) {
+      Alert.alert("Notification token is not available");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://192.168.1.174:3000/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title,
+          body: body,
+          token: sendNotifToken,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send notification");
+      }
+
+      Alert.alert("Notification request sent successfully");
+    } catch (error : any) {
+      Alert.alert("Error sending notification request", error.message);
+    }
+  };
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+    <>
+      <StatusBar barStyle={"light-content"} translucent={true} backgroundColor={"black"}/>
+      <ThemedView
+        style={{
+          flex: 1,
+          paddingTop: Platform.OS == "android" ? StatusBar.currentHeight : 10,
+          backgroundColor: "black",
+        }}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <ThemedText type="subtitle" style={{ color: "red" }}>
+            Your token:
+          </ThemedText>
+          <ThemedText>{expoPushToken}</ThemedText>
+          <ThemedText type="subtitle">Latest notification:</ThemedText>
+          <ThemedText>{notification?.request.content.title}</ThemedText>
+          <ThemedText>
+            {JSON.stringify(notification?.request.content.data, null, 2)}
+          </ThemedText>
+
+          <TextInput
+            style={{
+              height: 40,
+              borderColor: 'gray',
+              borderWidth: 1,
+              marginVertical: 10,
+              paddingHorizontal: 10,
+            }}
+            placeholder="Enter notification token"
+            value={sendNotifToken}
+            onChangeText={setSendNotifToken}
+          />
+
+          <Button
+            onPress={() => sendNotification("Test Title", "Test Body")}
+            title="Send Notification"
+          />
+        </SafeAreaView>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

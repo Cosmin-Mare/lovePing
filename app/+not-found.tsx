@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import React from 'react';
 
 export default function NotFoundScreen() {
   return (
@@ -15,7 +16,7 @@ export default function NotFoundScreen() {
         </Link>
       </ThemedView>
     </>
-  );
+  );``
 }
 
 const styles = StyleSheet.create({
