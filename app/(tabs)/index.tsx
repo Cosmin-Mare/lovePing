@@ -28,15 +28,17 @@ export default function HomeScreen() {
     const fetchStoredData = async () => {
       const userName = await AsyncStorage.getItem('userName');
       const expoToken = await AsyncStorage.getItem('expoPushToken');
+      const storedSearchedUserToken = await AsyncStorage.getItem('searchedUserToken');
       setStoredUserName(userName);
       setName(userName == null ? "" : userName);
       setStoredExpoPushToken(expoToken);
+      setSearchedUserToken(storedSearchedUserToken);
 
       // Skip steps based on stored data
       if (userName) {
         setCurrentStep(2); // Skip to step 2 if a name is stored
       }
-      if (expoToken) {
+      if (storedSearchedUserToken) {
         setCurrentStep(3); // Skip to step 3 if a token is stored
       }
     };
@@ -52,7 +54,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const response = await fetch("http://192.168.1.174:3000/send-notification", {
+      const response = await fetch("https://lovepingexpress-production.up.railway.app/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +83,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const response = await fetch("http://192.168.1.174:3000/save-user", {
+      const response = await fetch("https://lovepingexpress-production.up.railway.app/save-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,11 +99,8 @@ export default function HomeScreen() {
       }
 
       await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('expoPushToken', expoPushToken);
 
       setStoredUserName(name);
-      setStoredExpoPushToken(expoPushToken);
-
       Alert.alert("User saved successfully");
       setCurrentStep(2); // Move to the next step
     } catch (error: any) {
@@ -116,7 +115,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const response = await fetch(`http://192.168.1.174:3000/get-user`, {
+      const response = await fetch(`https://lovepingexpress-production.up.railway.app/get-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,6 +128,9 @@ export default function HomeScreen() {
 
       const data = await response.json();
       setSearchedUserToken(data.notifToken);
+      setStoredExpoPushToken(data.notifToken);
+      await AsyncStorage.setItem('searchedUserToken', data.notifToken);
+
       Alert.alert("User found and token stored");
       setCurrentStep(3); // Move to the next step
     } catch (error: any) {
@@ -144,7 +146,7 @@ export default function HomeScreen() {
     }
 
     try {
-      const response = await fetch("http://192.168.1.174:3000/send-notification", {
+      const response = await fetch("https://lovepingexpress-production.up.railway.app/send-notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,6 +172,7 @@ export default function HomeScreen() {
     // Clear local storage
     await AsyncStorage.removeItem('userName');
     await AsyncStorage.removeItem('expoPushToken');
+    await AsyncStorage.removeItem('searchedUserToken');
     
     // Reset state variables
     setStoredUserName(null);
@@ -234,12 +237,12 @@ export default function HomeScreen() {
             <View style={{ display: "flex", height: "100%", justifyContent: 'center', paddingHorizontal: "20%" }}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your name"
+                placeholder="Enter their name😊"
                 value={searchUserName}
                 onChangeText={setSearchUserName}
               />
               <TouchableOpacity onPress={searchUser} style={{ backgroundColor: Colors.light.red, padding: 10, borderRadius: 15 }}>
-                <ThemedText style={{ color: 'white', textAlign: 'center', fontWeight: "700" }}>Enter</ThemedText>
+                <ThemedText style={{ color: 'white', textAlign: 'center', fontWeight: "700" }}>Connect❤️</ThemedText>
               </TouchableOpacity>
             </View>
           </>
